@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>报销核对监控 · 只读快照</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --line:#e7ebf3; --text:#1c2333; --muted:#7a8499;
+    --primary:#3b6ef5; --primary-soft:#eaf0ff; --red:#e5484d; --red-soft:#fdebec;
+    --green:#18a058; --green-soft:#e6f7ee; --amber:#e8871e; --amber-soft:#fdf3e4;
+    --radius:16px; --shadow:0 1px 2px rgba(20,30,60,.05), 0 6px 24px rgba(20,30,60,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:env(safe-area-inset-bottom);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#3b6ef5,#6a5cf5);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .brand h1{font-size:20px;font-weight:700;letter-spacing:.5px}
+  .brand p{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .head-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .meta{font-size:12.5px;color:var(--muted)}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:#fff;background:var(--primary);border:none;border-radius:10px;padding:9px 16px;cursor:pointer;font-family:inherit}
+  .btn:hover{filter:brightness(1.05)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.ghost{color:var(--text);background:#fff;border:1px solid var(--line)}
+  .btn.ghost:hover{background:#f5f7fc}
+  .run-tip{font-size:12px;color:var(--amber);max-width:380px;text-align:right}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow)}
+  .kpi .k{font-size:13px;color:var(--muted);margin-bottom:5px}
+  .kpi .v{font-size:27px;font-weight:700;letter-spacing:.5px}
+  .kpi.danger .v{color:var(--red)}
+  .kpi.warn .v{color:var(--amber)}
+  .kpi.ok .v{color:var(--green)}
+  .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+  .banner{display:flex;align-items:flex-start;gap:10px;background:var(--primary-soft);border:1px solid #d6e0ff;border-radius:12px;padding:12px 16px;font-size:13px;color:#33508f;margin-bottom:16px}
+  .banner svg{flex:0 0 auto;margin-top:2px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 20px;border-bottom:1px solid var(--line)}
+  .card-h h2{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .badge{font-size:12px;font-weight:600;color:var(--red);background:var(--red-soft);border-radius:999px;padding:2px 10px}
+  .badge.zero{color:var(--green);background:var(--green-soft)}
+  .card-b{padding:16px 20px}
+
+  .group{border:1px solid #f6c7c9;background:var(--red-soft);border-radius:12px;padding:16px;margin-bottom:14px}
+  .group:last-child{margin-bottom:0}
+  .group-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .group-h .t{font-weight:700;font-size:15px}
+  .fieldtag{font-size:11.5px;font-weight:600;background:#fff;border:1px solid #f0c4c6;color:#b34045;border-radius:6px;padding:2px 8px}
+  .group .v{font-size:13px;color:#8c3a3d;word-break:break-all;margin:4px 0 12px}
+  .rec{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f2d2d4;border-radius:10px;padding:10px 12px;margin-bottom:8px;flex-wrap:wrap}
+  .rec:last-child{margin-bottom:0}
+  .rec .info{flex:1;min-width:200px;font-size:13px}
+  .rec .info .row{display:flex;gap:14px;flex-wrap:wrap;color:#5b6472}
+  .rec .info .row span b{color:var(--text);font-weight:600}
+  .st{display:inline-flex;align-items:center;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap}
+  .st.pending{color:var(--amber);background:var(--amber-soft)}
+  .st.modified{color:var(--primary);background:var(--primary-soft)}
+  .st.clean{color:var(--green);background:var(--green-soft)}
+  .rec a{font-size:12.5px;color:var(--primary);background:var(--primary-soft);border-radius:8px;padding:6px 11px;text-decoration:none;font-weight:600;white-space:nowrap}
+  .rec a:hover{background:var(--primary);color:#fff}
+
+  .empty{text-align:center;padding:34px 20px;color:var(--muted)}
+  .empty .ok-ico{width:52px;height:52px;border-radius:50%;background:var(--green-soft);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:9px 10px;border-bottom:1px solid var(--line);background:#fafbfe}
+  tbody td{padding:10px;border-bottom:1px solid #f1f4f9}
+  tbody tr:last-child td{border-bottom:none}
+  .table-name{font-weight:600}
+  .group-tag{font-size:11px;color:var(--primary);background:var(--primary-soft);border-radius:6px;padding:2px 7px;font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+
+  .note{font-size:12.5px;color:var(--muted);background:#fbfcff;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;line-height:1.8}
+  .note b{color:var(--text)}
+  input[type=file]{display:none}
+
+  @media (max-width:768px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .kpi .v{font-size:23px}
+    thead th:nth-child(2),tbody td:nth-child(2){display:none}
+    header{flex-direction:column;align-items:flex-start}
+    .head-right{align-items:flex-start}
+    .run-tip{text-align:left}
+    .rec .info .row{flex-direction:column;gap:2px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Z" stroke="#fff" stroke-width="1.8"/><path d="M3 9h18M9 3v18" stroke="#fff" stroke-width="1.8"/></svg>
+      </div>
+      <div>
+        <h1>报销核对监控 · 只读快照</h1>
+        <p>分公司报销表 · 总部报销表 ｜ 供各部门查看自身查重结果</p>
+      </div>
+    </div>
+    <div class="head-right">
+      <div class="meta" id="syncMeta">数据更新时间：--</div>
+      <div class="run-tip" style="max-width:none;text-align:right">本页为只读快照，由后台自动同步排查结果；如需人工核对请到飞书表操作。</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="kpi"><div class="k">监控子表</div><div class="v num" id="kTables">--</div><div class="s">本次排查 <span id="kChecked">--</span> / 跳过 <span id="kSkipped">--</span></div></div>
+    <div class="kpi"><div class="k">记录总数</div><div class="v num" id="kRecords">--</div><div class="s">已监控的报销记录</div></div>
+    <div class="kpi warn"><div class="k">待排查</div><div class="v num" id="kPending">--</div><div class="s">等待人工核查</div></div>
+    <div class="kpi"><div class="k">已修改</div><div class="v num" id="kModified">--</div><div class="s">重新纳入查重</div></div>
+    <div class="kpi ok"><div class="k">未重复</div><div class="v num" id="kExclude">--</div><div class="s">已排除，不再提示</div></div>
+    <div class="kpi danger"><div class="k">疑似重复组</div><div class="v num" id="kGroups">--</div><div class="s">待人工裁定的重复组</div></div>
+  </div>
+
+  <div class="banner">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3 2.5 20h19L12 3Z" stroke="#3b6ef5" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9.5v4.5M12 17.2v.3" stroke="#3b6ef5" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>以下为<b>机器筛选出的疑似重复</b>，仅供各助理参考，不作最终判定。确认真实情况请到飞书表核对。</span>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>疑似重复 · 待人工核查</h2><span class="badge" id="dupBadge">0</span></div>
+    <div class="card-b" id="dupList"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>核对已通过 · 数据被改动</h2><span class="badge" id="approvedBadge">0</span></div>
+    <div class="card-b" id="approvedList"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>监控清单</h2><span style="font-size:12px;color:var(--muted)" id="scopeText"></span></div>
+    <div class="card-b" style="padding:0">
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>子表</th><th>所属</th><th>记录</th><th>待排查</th><th>已修改</th><th>未重复</th><th>疑似组</th></tr></thead>
+          <tbody id="tableList"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" id="ruleNote"></div>
+</div>
+
+<script>
+var EMBEDDED = {"generated_at": "2026-09-29 11:22:42", "mode": "manual", "first_run": false, "checked_tables": [{"base_name": "分公司报销表", "table_name": "1公司", "status": "checked", "records_count": 15, "pending_count": 15, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "2公司", "status": "checked", "records_count": 27, "pending_count": 27, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "3公司", "status": "checked", "records_count": 8, "pending_count": 8, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "4公司", "status": "checked", "records_count": 22, "pending_count": 22, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "7公司", "status": "checked", "records_count": 45, "pending_count": 45, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "8公司", "status": "checked", "records_count": 63, "pending_count": 63, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "9公司", "status": "checked", "records_count": 13, "pending_count": 13, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "总部1", "status": "checked", "records_count": 5, "pending_count": 5, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "总部2", "status": "checked", "records_count": 11, "pending_count": 11, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "总部3", "status": "checked", "records_count": 21, "pending_count": 21, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "总部4", "status": "checked", "records_count": 55, "pending_count": 55, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "总部5", "status": "checked", "records_count": 23, "pending_count": 23, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "IP（邓泽斌）报销", "status": "checked", "records_count": 98, "pending_count": 98, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "IP（蔡志豪）报销", "status": "checked", "records_count": 60, "pending_count": 60, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "分公司报销表", "table_name": "育恒芯报销", "status": "checked", "records_count": 45, "pending_count": 45, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "总部报销表", "table_name": "投流部门", "status": "checked", "records_count": 91, "pending_count": 91, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "总部报销表", "table_name": "电商部门", "status": "checked", "records_count": 30, "pending_count": 30, "modified_count": 0, "exclude_count": 0, "suspect_groups": 1}, {"base_name": "总部报销表", "table_name": "自媒体", "status": "checked", "records_count": 23, "pending_count": 23, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "总部报销表", "table_name": "值班室", "status": "checked", "records_count": 10, "pending_count": 10, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}, {"base_name": "总部报销表", "table_name": "行政部", "status": "checked", "records_count": 65, "pending_count": 65, "modified_count": 0, "exclude_count": 0, "suspect_groups": 0}], "suspects": [{"base": "CgX0ba2k6a0LshstIC5coEscnSi", "base_name": "总部报销表", "table_id": "tblyM83Mg4lFjUAZ", "table_name": "电商部门", "records_count": 30, "groups": [{"field": "付款截图", "value": "6a4209510a075e9f94be56a19d1f29c7.png", "record_count": 3, "records": [{"record_id": "recvuBOKmPrAQ7", "merchant": "CPOiup743897681802173407", "amount": "-200", "handler": "王小宁", "desc": "4744906643（快手）王琨老师育儿宝典快手橱窗保证金", "date": "2026-09-08", "status": "待排查", "link": "https://kcn48ady9hww.feishu.cn/base/CgX0ba2k6a0LshstIC5coEscnSi?table=tblyM83Mg4lFjUAZ&record=recvuBOKmPrAQ7"}, {"record_id": "recvuBPxtv1pyK", "merchant": "CPOiup757157877932237240", "amount": "-200", "handler": "王小宁", "desc": "4811524487琨老师育儿智慧快手橱窗保证金", "date": "2026-09-08", "status": "待排查", "link": "https://kcn48ady9hww.feishu.cn/base/CgX0ba2k6a0LshstIC5coEscnSi?table=tblyM83Mg4lFjUAZ&record=recvuBPxtv1pyK"}, {"record_id": "recvuBR8blW0D8", "merchant": "CPOlup787753793018175724", "amount": "-200", "handler": "王小宁", "desc": "4986291373广州和羹记食品有限公司快手橱窗保证金", "date": "2026-09-08", "status": "待排查", "link": "https://kcn48ady9hww.feishu.cn/base/CgX0ba2k6a0LshstIC5coEscnSi?table=tblyM83Mg4lFjUAZ&record=recvuBR8blW0D8"}], "is_new": false}]}], "approved": [], "summary": {"total_tables": 20, "skipped_tables": 0, "total_records": 730, "pending_count": 730, "modified_count": 0, "exclude_count": 0, "suspect_groups": 1, "new_alert_groups": 0, "approved_new": 0}};
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function num(v){ return (v==null||v==='') ? '--' : v; }
+function statusPill(st){
+  st = st || '待排查';
+  var cls = st==='未重复' ? 'clean' : (st==='已修改' ? 'modified' : 'pending');
+  return '<span class="st '+cls+'">'+esc(st)+'</span>';
+}
+
+function renderAll(data){
+  if(!data || !data.summary){ return; }
+  var s = data.summary || {};
+  var mode = data.mode === 'manual' ? '手动排查' : '定时排查';
+  document.getElementById('syncMeta').textContent = '数据更新时间：' + (data.generated_at||'--') + ' · ' + mode;
+
+  document.getElementById('kTables').textContent = num(s.total_tables);
+  document.getElementById('kChecked').textContent = num(s.total_tables);
+  document.getElementById('kSkipped').textContent = num(s.skipped_tables);
+  document.getElementById('kRecords').textContent = num(s.total_records);
+  document.getElementById('kPending').textContent = num(s.pending_count);
+  document.getElementById('kModified').textContent = num(s.modified_count);
+  document.getElementById('kExclude').textContent = num(s.exclude_count);
+  document.getElementById('kGroups').textContent = num(s.suspect_groups);
+
+  // 疑似重复组（只读，无确认按钮）
+  var html = '';
+  var totalGroups = 0;
+  (data.suspects||[]).forEach(function(t){
+    (t.groups||[]).forEach(function(g){
+      totalGroups++;
+      var recs = (g.records||[]).map(function(r){
+        var rows = [];
+        if(r.merchant) rows.push('<span>单号 <b>'+esc(r.merchant)+'</b></span>');
+        if(r.amount) rows.push('<span>金额 <b>'+esc(r.amount)+'</b></span>');
+        if(r.handler) rows.push('<span>经手 <b>'+esc(r.handler)+'</b></span>');
+        if(r.date) rows.push('<span>日期 <b>'+esc(r.date)+'</b></span>');
+        var link = r.link ? '<a href="'+esc(r.link)+'" target="_blank" rel="noopener">打开记录</a>' : '';
+        return '<div class="rec"><div class="info"><div class="row">'+rows.join('')+'</div></div>'
+          + '<div>'+statusPill(r.status)+'</div>'+link+'</div>';
+      }).join('');
+      html += '<div class="group">'
+        + '<div class="group-h"><span class="t">'+esc(t.base_name)+' · '+esc(t.table_name)+'</span>'
+        + '<span class="fieldtag">'+esc(g.field)+'</span>'
+        + '<span class="fieldtag">'+g.record_count+' 条记录</span></div>'
+        + '<div class="v">'+ (g.field==='商户单号' ? '商户单号：' : '文件：') + esc(g.value) +'</div>'
+        + recs + '</div>';
+    });
+  });
+  if(!html){
+    html = '<div class="empty"><div class="ok-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6.5" stroke="#18a058" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>当前没有待核查的疑似重复，一切正常</div></div>';
+  }
+  document.getElementById('dupList').innerHTML = html;
+  var badge = document.getElementById('dupBadge');
+  badge.textContent = totalGroups;
+  badge.className = 'badge' + (totalGroups===0 ? ' zero' : '');
+
+  // 核对已通过 · 数据被改动
+  var apprHtml = '';
+  var apprCount = 0;
+  (data.approved||[]).forEach(function(a){
+    var r = a.record || {};
+    apprCount++;
+    var rows = [];
+    rows.push('<span style="color:var(--muted)">'+esc(a.base_name)+' · '+esc(a.table_name)+'</span>');
+    if(r.merchant) rows.push('<span>单号 <b>'+esc(r.merchant)+'</b></span>');
+    if(r.amount) rows.push('<span>金额 <b>'+esc(r.amount)+'</b></span>');
+    if(r.handler) rows.push('<span>经手 <b>'+esc(r.handler)+'</b></span>');
+    if(r.date) rows.push('<span>日期 <b>'+esc(r.date)+'</b></span>');
+    var link = r.link ? '<a href="'+esc(r.link)+'" target="_blank" rel="noopener">打开记录</a>' : '';
+    apprHtml += '<div class="rec"><div class="info"><div class="row">'+rows.join('')+'</div></div>'
+      + '<span class="st clean">已通过·被改动</span>'+link+'</div>';
+  });
+  if(!apprHtml){
+    apprHtml = '<div class="empty"><div>暂无「已通过且数据被改动」的记录</div></div>';
+  }
+  document.getElementById('approvedList').innerHTML = apprHtml;
+  var aBadge = document.getElementById('approvedBadge');
+  aBadge.textContent = apprCount;
+  aBadge.className = 'badge' + (apprCount===0 ? ' zero' : '');
+
+  // 监控清单
+  var listHtml = '';
+  var checkedCount = 0, skippedCount = 0;
+  (data.checked_tables||[]).forEach(function(c){ if(c.status==='checked') checkedCount++; else skippedCount++; });
+  (data.checked_tables||[]).forEach(function(c){
+    var skipped = c.status==='skipped_date';
+    listHtml += '<tr><td class="table-name">'+esc(c.table_name)+'</td>'
+      + '<td><span class="group-tag">'+esc(c.base_name)+'</span></td>'
+      + '<td class="num">'+(c.records_count!=null?c.records_count:'--')+'</td>'
+      + '<td class="num">'+(skipped?'—':(c.pending_count!=null?c.pending_count:'--'))+'</td>'
+      + '<td class="num">'+(skipped?'—':(c.modified_count!=null?c.modified_count:'--'))+'</td>'
+      + '<td class="num">'+(skipped?'—':(c.exclude_count!=null?c.exclude_count:'--'))+'</td>'
+      + '<td>'+(skipped ? '<span class="group-tag" style="color:var(--muted);background:#eef1f7">非排查日</span>' : '<span class="num">'+(c.suspect_groups!=null?c.suspect_groups:0)+'</span>')+'</td></tr>';
+  });
+  document.getElementById('tableList').innerHTML = listHtml;
+  document.getElementById('scopeText').textContent = '本次排查 ' + checkedCount + ' 张 / 跳过 ' + skippedCount + ' 张';
+
+  document.getElementById('ruleNote').innerHTML =
+    '<b>查重规则：</b>仅对「同一张子表内部」查重；跨子表、分公司↔总部重复一律不提示。<br>'+
+    '<b>人工核查：</b>机器只做筛选，把疑似重复组列出来供核对；在飞书表该记录的【人工核查结果】字段标记「已修改」或「未重复」后，下次排查自动更新。<br>'+
+    '<b>已通过改动：</b>已标记「已通过」的记录若字段内容被改动，会在此列出，需复核。<br>'+
+    '<b>定时排查：</b>分公司表每月 1/15/20 号、总部表每天 15:05。本页数据随后台排查自动更新。';
+}
+
+renderAll(EMBEDDED);
+</script>
+</body>
+</html>
